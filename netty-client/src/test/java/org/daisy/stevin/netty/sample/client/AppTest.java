@@ -1,4 +1,4 @@
-package org.daisy.stevin.netty.sample;
+package org.daisy.stevin.netty.sample.client;
 
 import org.testng.annotations.Test;
 

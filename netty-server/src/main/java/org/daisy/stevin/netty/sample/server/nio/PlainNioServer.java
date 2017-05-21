@@ -1,4 +1,4 @@
-package org.daisy.stevin.netty.sample.compare;
+package org.daisy.stevin.netty.sample.server.nio;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

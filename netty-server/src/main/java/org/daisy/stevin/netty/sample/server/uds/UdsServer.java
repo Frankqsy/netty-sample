@@ -1,53 +1,38 @@
-package org.daisy.stevin.netty.sample.server;
+package org.daisy.stevin.netty.sample.server.uds;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.ChannelHandler.Sharable;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerDomainSocketChannel;
+import io.netty.channel.unix.DomainSocketAddress;
+import io.netty.channel.unix.DomainSocketChannel;
 import io.netty.util.CharsetUtil;
 
-import java.net.InetSocketAddress;
-
-/**
- * EchoServer
- *
- */
-public class EchoServer {
+public class UdsServer {
     public static void main(String[] args) throws Exception {
-        int port = 10000;
-        if (args.length >= 1) {
-            port = Integer.parseInt(args[0]);
-        }
-        new EchoServer(port).start();
+        new UdsServer().start("\0/data/uds/auds.sock");
     }
 
-    private final int port;
-
-    public EchoServer(int port) {
-        this.port = port;
-    }
-
-    public void start() throws Exception {
-        final EchoServerHandler serverHandler = new EchoServerHandler();
-        EventLoopGroup group = new NioEventLoopGroup();
+    public void start(String path) throws Exception {
+        final UdsServerHandler serverHandler = new UdsServerHandler();
+        EventLoopGroup group = new EpollEventLoopGroup();
         try {
             ServerBootstrap b = new ServerBootstrap();
             //@formatter:off
             b.group(group)
-             .channel(NioServerSocketChannel.class)
-             .localAddress(new InetSocketAddress(port))
-             .childHandler(new ChannelInitializer<SocketChannel>() {
+             .channel(EpollServerDomainSocketChannel.class)
+             .childHandler(new ChannelInitializer<DomainSocketChannel>() {
                 @Override
-                protected void initChannel(SocketChannel ch) throws Exception {
-                     ch.pipeline().addLast(serverHandler);                
+                protected void initChannel(DomainSocketChannel ch) throws Exception {
+                     ch.pipeline().addLast(serverHandler);
                 }
               });
             //@formatter:on
-            ChannelFuture f = b.bind().sync();
+            ChannelFuture f = b.bind(new DomainSocketAddress(path)).sync();
+            System.out.println(String.format("UdsServer start,connect path:%s", path));
             f.channel().closeFuture().sync();
         } finally {
             group.shutdownGracefully().sync();
@@ -55,7 +40,13 @@ public class EchoServer {
     }
 
     @Sharable
-    public class EchoServerHandler extends ChannelInboundHandlerAdapter {
+    private class UdsServerHandler extends ChannelInboundHandlerAdapter {
+
+        @Override
+        public void channelActive(ChannelHandlerContext ctx) throws Exception {
+            System.out.println("echo channel active!");
+            ctx.writeAndFlush(Unpooled.wrappedBuffer("hello,this is uds echo~".getBytes()));
+        }
 
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -74,6 +65,5 @@ public class EchoServer {
             cause.printStackTrace();
             ctx.close();
         }
-
     }
 }
