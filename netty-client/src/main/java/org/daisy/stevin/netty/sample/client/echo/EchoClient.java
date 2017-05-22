@@ -1,4 +1,4 @@
-package org.daisy.stevin.netty.sample.client;
+package org.daisy.stevin.netty.sample.client.echo;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
