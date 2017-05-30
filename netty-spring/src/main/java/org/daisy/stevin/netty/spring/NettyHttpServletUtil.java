@@ -22,7 +22,7 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.*;
 
-public class NettyServletUtil {
+public class NettyHttpServletUtil {
     public static DispatcherServlet getDispatcherServletFromXml(String configLocation) throws ServletException {
         XmlWebApplicationContext appContext = new XmlWebApplicationContext();
         ContextLoader contextLoader = new ContextLoader(appContext);
@@ -37,7 +37,17 @@ public class NettyServletUtil {
         return dispatcherServlet;
     }
 
-    public static void writeResponse(ChannelHandlerContext ctx, NettyServletRequest servletRequest, NettyServletResponse servletResponse) throws IOException {
+    public static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
+        ByteBuf content = Unpooled.copiedBuffer(String.format("Failure: %s\r\n", status.toString()), CharsetUtil.UTF_8);
+
+        FullHttpResponse fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, content);
+        fullHttpResponse.headers().add(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
+
+        // Close the connection as soon as the error message is sent.
+        ctx.write(fullHttpResponse).addListener(ChannelFutureListener.CLOSE);
+    }
+
+    public static void writeResponse(ChannelHandlerContext ctx, NettyHttpServletRequest servletRequest, NettyHttpServletResponse servletResponse) throws IOException {
         // Decide whether to close the connection or not.
         // boolean keepAlive = isKeepAlive(request);
         FullHttpResponse response = createFullHttpResponse(servletResponse);
@@ -56,7 +66,7 @@ public class NettyServletUtil {
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
 
-    public static void copyCookiesFromNettyRequest(NettyServletRequest servletRequest, FullHttpResponse response) {
+    public static void copyCookiesFromNettyRequest(NettyHttpServletRequest servletRequest, FullHttpResponse response) {
         NettyHttpSession httpSession = (NettyHttpSession) servletRequest.getSession();
         List<Cookie> cookies = new ArrayList<>();
         Enumeration<String> attriNames = httpSession.getAttributeNames();
@@ -70,7 +80,7 @@ public class NettyServletUtil {
         response.headers().add(HttpHeaderNames.SET_COOKIE, ServerCookieEncoder.LAX.encode(cookies));
     }
 
-    public static FullHttpResponse createFullHttpResponse(NettyServletResponse servletResponse) throws IOException {
+    public static FullHttpResponse createFullHttpResponse(NettyHttpServletResponse servletResponse) throws IOException {
         if (servletResponse == null) {
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
         }
@@ -91,7 +101,7 @@ public class NettyServletUtil {
         return response;
     }
 
-    public static NettyServletRequest createNettyServletRequest(FullHttpRequest fullHttpRequest, ServletContext servletContext) {
+    public static NettyHttpServletRequest createNettyServletRequest(FullHttpRequest fullHttpRequest, ServletContext servletContext) {
         NettyHttpSession httpSession = createNettyHttpSession(fullHttpRequest, servletContext);
         String method = fullHttpRequest.method().name();
         byte[] array = null;
@@ -99,7 +109,7 @@ public class NettyServletUtil {
             array = fullHttpRequest.content().array();
         }
         String contentType = fullHttpRequest.headers().get("Content-type");
-        NettyServletRequest servletRequest = new NettyServletRequest(fullHttpRequest.uri(), servletContext, method, array, contentType, httpSession);
+        NettyHttpServletRequest servletRequest = new NettyHttpServletRequest(fullHttpRequest.uri(), servletContext, method, array, contentType, httpSession);
         fullHttpRequest.headers().names().forEach((name) -> {
             List<String> values = fullHttpRequest.headers().getAll(name);
             values.forEach((value) -> servletRequest.addHeader(name, value));
@@ -110,22 +120,12 @@ public class NettyServletUtil {
     public static NettyHttpSession createNettyHttpSession(FullHttpRequest request, ServletContext servletContext) {
         NettyHttpSession httpSession = new NettyHttpSession(servletContext);
         String cookieString = request.headers().get(HttpHeaderNames.COOKIE);
-        if (StringUtil.isEmpty(cookieString)) {
+        if (NettyStringUtil.isEmpty(cookieString)) {
             return httpSession;
         }
         Set<Cookie> cookies = ServerCookieDecoder.LAX.decode(cookieString);
         cookies.forEach((cookie) -> httpSession.setAttribute(cookie.name(), cookie.value()));
         return httpSession;
-    }
-
-    public static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
-        ByteBuf content = Unpooled.copiedBuffer(String.format("Failure: %s\r\n", status.toString()), CharsetUtil.UTF_8);
-
-        FullHttpResponse fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, content);
-        fullHttpResponse.headers().add(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
-
-        // Close the connection as soon as the error message is sent.
-        ctx.write(fullHttpResponse).addListener(ChannelFutureListener.CLOSE);
     }
 
 }

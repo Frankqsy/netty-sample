@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:mvc="http://www.springframework.org/schema/mvc"
-	xsi:schemaLocation="
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="
     http://www.springframework.org/schema/context
     http://www.springframework.org/schema/context/spring-context.xsd
     http://www.springframework.org/schema/mvc
@@ -11,12 +11,37 @@
     http://www.springframework.org/schema/beans
     http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-	<!-- 静态资源请求 -->
- 	<!-- <mvc:resources location="classpath*:/views/" mapping="/**" cache-period="10"/> -->
+    <mvc:annotation-driven/>
+    <!-- 静态资源请求 -->
+    <mvc:resources location="classpath*:/views/public/" mapping="/**" cache-period="10"/>
     <!-- views -->
     <!-- 配置视图解析器 如何把handler 方法返回值解析为实际的物理视图 -->
-    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
-         <property name = "prefix" value="classpath*:/views/"></property>
-         <property name = "suffix" value = ".jsp"></property>
+    <bean id="freemarkerConfig" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+        <property name="templateLoaderPath" value="classpath:/views/" />
+        <property name="freemarkerSettings">
+            <props>
+                <prop key="defaultEncoding">UTF-8</prop>
+            </props>
+        </property>
+    </bean>
+
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+        <!--<property name="suffix" value=".html"></property>-->
+        <property name="viewClass" value="org.springframework.web.servlet.view.freemarker.FreeMarkerView" />
+        <property name="contentType" value="text/html; charset=utf-8" />
+        <property name="cache" value="true" />
+        <property name="allowSessionOverride" value="true" />
+        <property name="requestContextAttribute">
+            <value>request</value>
+        </property>
+        <property name="exposeRequestAttributes">
+            <value>true</value>
+        </property>
+        <property name="exposeSessionAttributes">
+            <value>true</value>
+        </property>
+        <property name="exposeSpringMacroHelpers">
+            <value>true</value>
+        </property>
     </bean>
 </beans>

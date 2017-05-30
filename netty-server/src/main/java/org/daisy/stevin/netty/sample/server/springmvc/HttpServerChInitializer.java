@@ -7,7 +7,7 @@ import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
-import org.daisy.stevin.netty.spring.NettyServletUtil;
+import org.daisy.stevin.netty.spring.NettyHttpServletUtil;
 import org.springframework.web.servlet.DispatcherServlet;
 
 import javax.servlet.ServletException;
@@ -20,7 +20,7 @@ public class HttpServerChInitializer extends ChannelInitializer<SocketChannel> {
     }
 
     public HttpServerChInitializer(String configLocation) throws ServletException {
-        this.dispatcherServlet = NettyServletUtil.getDispatcherServletFromXml(configLocation);
+        this.dispatcherServlet = NettyHttpServletUtil.getDispatcherServletFromXml(configLocation);
     }
 
     @Override

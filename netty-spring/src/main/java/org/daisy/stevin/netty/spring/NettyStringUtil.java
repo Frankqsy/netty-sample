@@ -2,7 +2,7 @@ package org.daisy.stevin.netty.spring;
 
 import lombok.NonNull;
 
-public class StringUtil {
+public class NettyStringUtil {
     public static final String EMPTY = "";
     public static final String SPACE = " ";
     public static final char DOT = '.';

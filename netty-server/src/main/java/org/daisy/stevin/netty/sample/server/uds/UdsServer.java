@@ -9,7 +9,9 @@ import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerDomainSocketChannel;
 import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.channel.unix.DomainSocketChannel;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
 
 public class UdsServer {
     public static void main(String[] args) throws Exception {
@@ -27,7 +29,8 @@ public class UdsServer {
              .childHandler(new ChannelInitializer<DomainSocketChannel>() {
                 @Override
                 protected void initChannel(DomainSocketChannel ch) throws Exception {
-                     ch.pipeline().addLast(serverHandler);
+                    ch.pipeline().addLast(new LineBasedFrameDecoder(1024));
+                    ch.pipeline().addLast(serverHandler);
                 }
               });
             //@formatter:on
@@ -53,6 +56,7 @@ public class UdsServer {
             ByteBuf in = (ByteBuf) msg;
             System.out.println("Server received: " + in.toString(CharsetUtil.UTF_8));
             ctx.write(in);
+            ReferenceCountUtil.release(msg);
         }
 
         @Override

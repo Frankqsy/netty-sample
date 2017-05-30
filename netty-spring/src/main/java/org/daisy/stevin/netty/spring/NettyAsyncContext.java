@@ -1,5 +1,7 @@
 package org.daisy.stevin.netty.spring;
 
+import org.springframework.beans.BeanUtils;
+
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 
@@ -11,7 +13,7 @@ import java.util.Objects;
 public class NettyAsyncContext implements AsyncContext {
     private ServletRequest servletRequest;
     private ServletResponse servletResponse;
-    private long timeout;
+    private long timeout = 10 * 1000L;
     private List<AsyncListener> asyncListeners = new ArrayList<>();
 
     public NettyAsyncContext(ServletRequest servletRequest, ServletResponse servletResponse) {
@@ -74,8 +76,8 @@ public class NettyAsyncContext implements AsyncContext {
     }
 
     @Override
-    public void start(Runnable run) {
-        throw new UnsupportedOperationException();
+    public void start(Runnable runnable) {
+        runnable.run();
     }
 
     @Override
@@ -85,12 +87,12 @@ public class NettyAsyncContext implements AsyncContext {
 
     @Override
     public void addListener(AsyncListener listener, ServletRequest servletRequest, ServletResponse servletResponse) {
-        throw new UnsupportedOperationException();
+        this.asyncListeners.add(listener);
     }
 
     @Override
     public <T extends AsyncListener> T createListener(Class<T> clazz) throws ServletException {
-        throw new UnsupportedOperationException();
+        return BeanUtils.instantiateClass(clazz);
     }
 
     @Override

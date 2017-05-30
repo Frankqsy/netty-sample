@@ -1,5 +1,7 @@
 package org.daisy.stevin.netty.spring;
 
+import org.springframework.util.Assert;
+
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -9,9 +11,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
 
-public class NettyServletResponse implements HttpServletResponse {
+public class NettyHttpServletResponse implements HttpServletResponse {
     private int status = SC_OK;
-    private Map<String, List<Object>> header = new HashMap<>();
+    private Map<String, List<Object>> headers = new HashMap<>();
     private String contentType = "text/html;charset=UTF-8";
     private boolean committed = false;
     private NettyServletOutputStream servletOutputStream;
@@ -21,6 +23,10 @@ public class NettyServletResponse implements HttpServletResponse {
     private String errorMessage;
     private StringWriter stringWriter;
     private PrintWriter writer;
+    private String forwardedUrl;
+    private final List<String> includedUrls = new ArrayList<String>();
+    private Locale locale = Locale.getDefault();
+    private final List<Cookie> cookies = new ArrayList<Cookie>();
 
     @Override
     public String getCharacterEncoding() {
@@ -81,7 +87,7 @@ public class NettyServletResponse implements HttpServletResponse {
     public void setContentLengthLong(long len) {
         List<Object> col = new ArrayList<>();
         col.add(len);
-        this.header.put("Content-Length", col);
+        this.headers.put("Content-Length", col);
     }
 
     @Override
@@ -118,27 +124,34 @@ public class NettyServletResponse implements HttpServletResponse {
 
     @Override
     public void reset() {
-
+        this.contentType = null;
+        this.locale = null;
+        this.cookies.clear();
+        this.headers.clear();
+        this.status = HttpServletResponse.SC_OK;
+        this.errorMessage = null;
     }
 
     @Override
     public void setLocale(Locale loc) {
-
+        this.locale = locale;
     }
 
     @Override
     public Locale getLocale() {
-        return null;
+        return this.locale;
     }
 
     @Override
     public void addCookie(Cookie cookie) {
-
+        if (cookie != null) {
+            this.cookies.add(cookie);
+        }
     }
 
     @Override
     public boolean containsHeader(String name) {
-        return name == null ? false : this.header.containsKey(name);
+        return name == null ? false : this.headers.containsKey(name);
     }
 
     @Override
@@ -187,15 +200,15 @@ public class NettyServletResponse implements HttpServletResponse {
     public void setDateHeader(String name, long date) {
         List<Object> col = new ArrayList<>();
         col.add(date);
-        this.header.put(name, col);
+        this.headers.put(name, col);
     }
 
     @Override
     public void addDateHeader(String name, long date) {
-        Collection<Object> col = this.header.get(name);
+        Collection<Object> col = this.headers.get(name);
         if (col == null) {
             List<Object> list = new ArrayList<>();
-            this.header.put(name, list);
+            this.headers.put(name, list);
             col = list;
         }
         col.add(date);
@@ -205,15 +218,15 @@ public class NettyServletResponse implements HttpServletResponse {
     public void setHeader(String name, String value) {
         List<Object> col = new ArrayList<>();
         col.add(value);
-        this.header.put(name, col);
+        this.headers.put(name, col);
     }
 
     @Override
     public void addHeader(String name, String value) {
-        Collection<Object> col = this.header.get(name);
+        Collection<Object> col = this.headers.get(name);
         if (col == null) {
             List<Object> list = new ArrayList<>();
-            this.header.put(name, list);
+            this.headers.put(name, list);
             col = list;
         }
         col.add(value);
@@ -223,15 +236,15 @@ public class NettyServletResponse implements HttpServletResponse {
     public void setIntHeader(String name, int value) {
         List<Object> col = new ArrayList<>();
         col.add(value);
-        this.header.put(name, col);
+        this.headers.put(name, col);
     }
 
     @Override
     public void addIntHeader(String name, int value) {
-        Collection<Object> col = this.header.get(name);
+        Collection<Object> col = this.headers.get(name);
         if (col == null) {
             List<Object> list = new ArrayList<>();
-            this.header.put(name, list);
+            this.headers.put(name, list);
             col = list;
         }
         col.add(value);
@@ -258,9 +271,9 @@ public class NettyServletResponse implements HttpServletResponse {
 
     @Override
     public String getHeader(String name) {
-        Collection<String> headers = getHeaders(name);
-        if (headers != null && headers.iterator().hasNext()) {
-            return headers.iterator().next();
+        Collection<String> tmpHeaders = getHeaders(name);
+        if (tmpHeaders != null && tmpHeaders.iterator().hasNext()) {
+            return tmpHeaders.iterator().next();
         }
         return null;
     }
@@ -268,9 +281,9 @@ public class NettyServletResponse implements HttpServletResponse {
     @Override
     public Collection<String> getHeaders(String name) {
         List<String> list = new ArrayList<>();
-        Collection<Object> headers = this.header.get(name);
-        if (headers != null) {
-            for (Object obj : headers) {
+        Collection<Object> tmpHeaders = this.headers.get(name);
+        if (tmpHeaders != null) {
+            for (Object obj : tmpHeaders) {
                 list.add(obj.toString());
             }
         }
@@ -279,7 +292,40 @@ public class NettyServletResponse implements HttpServletResponse {
 
     @Override
     public Collection<String> getHeaderNames() {
-        return new ArrayList<>(this.header.keySet());
+        return new ArrayList<>(this.headers.keySet());
+    }
+
+    public void setForwardedUrl(String forwardedUrl) {
+        this.forwardedUrl = forwardedUrl;
+    }
+
+    public String getForwardedUrl() {
+        return this.forwardedUrl;
+    }
+
+    public void setIncludedUrl(String includedUrl) {
+        this.includedUrls.clear();
+        if (includedUrl != null) {
+            this.includedUrls.add(includedUrl);
+        }
+    }
+
+    public String getIncludedUrl() {
+        int count = this.includedUrls.size();
+        if (count > 1) {
+            throw new IllegalStateException(
+                    "More than 1 URL included - check getIncludedUrls instead: " + this.includedUrls);
+        }
+        return (count == 1 ? this.includedUrls.get(0) : null);
+    }
+
+    public void addIncludedUrl(String includedUrl) {
+        Assert.notNull(includedUrl, "Included URL must not be null");
+        this.includedUrls.add(includedUrl);
+    }
+
+    public List<String> getIncludedUrls() {
+        return this.includedUrls;
     }
 
 }
