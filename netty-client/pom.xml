@@ -13,6 +13,16 @@
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>netty-service</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>netty-soa</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
         </dependency>
