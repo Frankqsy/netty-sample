@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.daisy.stevin</groupId>
         <artifactId>netty-sample</artifactId>
-        <version>${project.version}</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>netty-client</artifactId>
     <url>http://maven.apache.org</url>

@@ -2,10 +2,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.version>0.0.1-SNAPSHOT</project.version>
         <java.jdk.version>1.8</java.jdk.version>
         <spring.version>4.3.6.RELEASE</spring.version>
         <freemarker.version>2.3.26-incubating</freemarker.version>
@@ -15,7 +13,7 @@
 
     <groupId>org.daisy.stevin</groupId>
     <artifactId>netty-sample</artifactId>
-    <version>${project.version}</version>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>netty-sample</name>
     <url>http://maven.apache.org</url>

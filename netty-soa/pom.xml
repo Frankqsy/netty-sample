@@ -6,7 +6,7 @@
     <parent>
         <artifactId>netty-sample</artifactId>
         <groupId>org.daisy.stevin</groupId>
-        <version>${project.version}</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
 
 
