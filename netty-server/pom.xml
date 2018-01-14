@@ -13,10 +13,6 @@
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-        </dependency>
-        <dependency>
             <groupId>${project.parent.groupId}</groupId>
             <artifactId>netty-service</artifactId>
             <version>${project.parent.version}</version>
@@ -27,17 +23,20 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.parent.groupId}</groupId>
-            <artifactId>netty-spring</artifactId>
-            <version>${project.parent.version}</version>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
-            <artifactId>spring-context-support</artifactId>
+            <artifactId>spring-context</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.freemarker</groupId>
-            <artifactId>freemarker</artifactId>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-netty4</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
